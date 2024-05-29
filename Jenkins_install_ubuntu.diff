@@ -17,3 +17,6 @@ sudo systemctl status jenkins
 ------------------Official Page-------------------
 
 https://www.jenkins.io/doc/book/installing/linux/#debianubuntu
+
+STOP Jenkins
+sudo systemctl status jenkins
