@@ -1,0 +1,54 @@
+pipeline {
+    agent any
+    tools {
+        jdk 'jdk11'
+        maven 'maven3'
+    }
+    
+
+    stages {
+        stage('Git Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/shruti-saxena10/Petclinic.git'
+            }
+        }
+        stage('Code Compile') {
+            steps {
+                sh 'mvn clean compile'
+            }
+        }
+        stage('Test Cases') {
+            steps {
+                sh 'mvn clean test'
+            }
+        }
+        stage('OWASP Dependency Check') {
+            steps {
+                dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'DP-Check'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'mvn clean install'
+            }
+        }
+        stage('Docker Build and Push') {
+            steps {
+                script{
+                    withDockerRegistry(credentialsId: '1b83350f-6378-42a2-8f1e-d587e117efc5', toolName: 'docker'){
+                        sh 'docker build -t image1 .'
+                        sh 'docker tag image1 iamsaxenashruti/pet-clinic123:latest'
+                        sh 'docker push iamsaxenashruti/pet-clinic123:latest'
+                    }
+                }
+            }
+        }
+        stage('Trivy') {
+            steps {
+                sh 'trivy image iamsaxenashruti/pet-clinic123:latest'
+            }
+        }
+    }
+    
+}
